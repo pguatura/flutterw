@@ -1,0 +1,46 @@
+#/bin/bash -e
+
+dir=$(dirname $0)
+VERSION=v1.7.8+hotfix.3
+
+machine="$(uname -s)"
+
+GEN_DIR=$dir/gen
+BASE_DIR=$dir
+mkdir -p $GEN_DIR || true
+
+if [[ ! -f $GEN_DIR/flutter.pack ]];then
+    case "$machine" in
+    Darwin* )
+        curl -o $GEN_DIR/flutter.pack https://storage.googleapis.com/flutter_infra/releases/stable/macos/flutter_macos_$VERSION-stable.zip
+        unzip $GEN_DIR/flutter.pack -d "$GEN_DIR"
+        ;;
+    Linux* )
+        curl -o $GEN_DIR/flutter.pack https://storage.googleapis.com/flutter_infra/releases/stable/linux/flutter_linux_$VERSION-stable.tar.xz
+        tar xJfv $GEN_DIR/flutter.pack -C "$GEN_DIR"
+        ;;
+    esac
+
+    $GEN_DIR/flutter/bin/flutter channel stable
+
+fi
+
+getversion() {
+    $GEN_DIR/flutter/bin/flutter --version | awk 'NR==1 {print $2; exit}'
+}
+
+if [[ ! -f $BASE_DIR/flutterw.lock ]];then
+    $GEN_DIR/flutter/bin/flutter channel stable
+    $GEN_DIR/flutter/bin/flutter upgrade
+    getversion > $BASE_DIR/flutterw.lock
+elif [[ $(getversion) != $(cat $BASE_DIR/flutterw.lock) ]]; then
+    version=$(cat $BASE_DIR/flutterw.lock)
+    $GEN_DIR/flutter/bin/flutter version $version
+fi
+
+$GEN_DIR/flutter/bin/flutter "$@"
+
+
+if [[ "$1" == "upgrade" ]];then
+    getversion > $BASE_DIR/flutterw.lock
+fi
