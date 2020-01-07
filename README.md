@@ -8,4 +8,4 @@ How to use it:
 It will download locally the flutter executable and upgrade it to the last stable version. After that, it will proxy every command to the flutter executable.
 
 
-My suggestion is to copy and past it into your project :D
+My suggestion is to copy and paste it into your project :D
